@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VirtualAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                    <circle cx="7.5" cy="14.5" r="1.5"/>
+                    <circle cx="16.5" cy="14.5" r="1.5"/>
+                </svg>
+                <span>VirtualAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="dashboard.html" class="active">Dashboard</a>
+                <a href="files.html">Files</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="files.html">Files</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>Chat History</h3>
+                    <button class="new-chat-btn" id="newChatBtn" type="button" title="Start New Chat">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>New Chat</span>
+                    </button>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="chat-history-list" id="chatHistoryList">
+                        <!-- Chat history items will be added here dynamically -->
+                    </div>
+                </nav>
+
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-header">
+                    <h1>VirtualAI Assistant</h1>
+                    <p>Ask me to create, edit, read, delete, or search files. I can also send emails for you.</p>
+                </div>
+
+                <!-- Chat Interface -->
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-header-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>VirtualAI Assistant</h2>
+                            <p>Online and ready to help</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages" aria-live="polite">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <div class="chat-input-container">
+                        <div class="quick-commands" aria-label="Suggested commands">
+                            <button class="quick-cmd" type="button" data-cmd="create file">Create File</button>
+                            <button class="quick-cmd" type="button" data-cmd="send email">Send Email</button>
+                            <button class="quick-cmd" type="button" data-cmd="search files">Search Files</button>
+                            <button class="quick-cmd" type="button" data-cmd="help">Help</button>
+                        </div>
+                        <div class="upload-panel">
+                            <label for="uploadFolder">Upload files from your computer</label>
+                            <input type="text" id="uploadFolder" placeholder="Optional folder (e.g., reports)">
+                            <input type="file" id="uploadFiles" multiple>
+                            <button type="button" id="uploadBtn" class="btn btn-secondary">Upload Files</button>
+                            <div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <textarea 
+                                class="chat-input" 
+                                id="chatInput" 
+                                aria-label="Chat command input"
+                                placeholder="Type your command here... (e.g., 'create file report.txt')"
+                                rows="1"
+                            ></textarea>
+                            <button class="voice-btn" id="voiceBtn" type="button" title="Voice Command (Click to speak)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                            </button>
+                            <button class="chat-send-btn" id="sendBtn" type="button" aria-label="Send message">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- File Edit Modal -->
+    <div class="modal-overlay" id="fileModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit File</h3>
+                <button class="modal-close" id="modalClose" type="button" aria-label="Close edit file modal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 12px; color: var(--color-gray-500); font-size: 14px;">Edit the file content below and click "Save Changes" to update.</p>
+                <textarea id="modalTextarea" style="width: 100%; height: 350px; padding: 12px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; border: 1px solid var(--color-gray-300); border-radius: 8px; resize: vertical; background: var(--color-gray-50); color: var(--color-primary);"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCloseBtn" type="button">Cancel</button>
+                <button class="btn btn-primary" id="modalSaveBtn" type="button">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* New Chat Button Styles */
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .new-chat-btn:hover {
+            background: var(--color-accent-dark, #2563eb);
+            transform: translateY(-1px);
+        }
+        
+        /* Chat History List */
+        .chat-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .chat-history-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            color: var(--color-gray-600);
+        }
+        .chat-history-item:hover {
+            background: var(--color-gray-100);
+        }
+        .chat-history-item.active {
+            background: var(--color-gray-200);
+            color: var(--color-primary);
+        }
+        .chat-history-item svg {
+            flex-shrink: 0;
+        }
+        .chat-history-item-content {
+            flex: 1;
+            overflow: hidden;
+        }
+        .chat-history-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-history-item-date {
+            font-size: 11px;
+            color: var(--color-gray-400);
+        }
+        .chat-history-item-delete {
+            opacity: 0;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-gray-500);
+        }
+        .chat-history-item:hover .chat-history-item-delete {
+            opacity: 1;
+        }
+        .chat-history-item-delete:hover {
+            background: var(--color-gray-300);
+            color: var(--color-error);
+        }
+        .upload-panel {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 14px;
+        }
+        .upload-panel input[type="text"] {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--color-gray-300);
+            font-size: 14px;
+            background: white;
+            color: var(--color-primary);
+        }
+        .upload-panel input[type="file"] {
+            font-size: 13px;
+        }
+        .upload-status {
+            min-height: 22px;
+            font-size: 13px;
+            color: var(--color-gray-600);
+        }
+        
+        /* No history message */
+        .no-history {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-gray-400);
+            font-size: 13px;
+        }
+    </style>
+
+    <script src="js/main.js"></script>
+    <script src="js/assistant.js"></script>
+</body>
+</html>
