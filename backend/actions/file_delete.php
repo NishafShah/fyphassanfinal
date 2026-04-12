@@ -53,18 +53,13 @@ function deleteFile($input) {
             }
         }
 
+        $syncWarnings = [];
         if (!removeDesktopFile($filename)) {
-            return [
-                'success' => false,
-                'message' => 'File deleted from uploads but could not be removed from the desktop.'
-            ];
+            $syncWarnings[] = 'Desktop mirror copy could not be removed.';
         }
 
         if (!removeDriveDFile($filename, $folder)) {
-            return [
-                'success' => false,
-                'message' => 'File deleted from uploads but could not be removed from D:\\.'
-            ];
+            $syncWarnings[] = 'D drive mirror copy could not be removed.';
         }
         
         // Delete from database
@@ -74,7 +69,8 @@ function deleteFile($input) {
         return [
             'success' => true,
             'message' => 'File deleted successfully.',
-            'deleted' => $filename
+            'deleted' => $filename,
+            'warnings' => $syncWarnings
         ];
         
     } catch (Exception $e) {

@@ -45,6 +45,7 @@ function editFile($input) {
     $desktopFilepath = getDesktopFilePath($filename);
     $folder = $file['folder'] ?? '';
     $driveDFilepath = getDriveDFilePath($filename, $folder);
+    $syncWarnings = [];
     
     // Check if file exists on disk
     if (!file_exists($filepath)) {
@@ -70,17 +71,11 @@ function editFile($input) {
         }
 
         if (!syncFileToDesktop($filename, $content)) {
-            return [
-                'success' => false,
-                'message' => 'File was updated in uploads but could not be synced to the desktop.'
-            ];
+            $syncWarnings[] = 'Desktop mirror copy could not be updated.';
         }
 
         if (!syncFileToDriveD($filename, $content, $folder)) {
-            return [
-                'success' => false,
-                'message' => 'File was updated in uploads but could not be synced to D:\\.'
-            ];
+            $syncWarnings[] = 'D drive mirror copy could not be updated.';
         }
         
         $newSize = strlen($content);
@@ -106,7 +101,8 @@ function editFile($input) {
                 'size' => $newSize,
                 'desktop_filepath' => $desktopFilepath,
                 'drive_d_filepath' => $driveDFilepath
-            ]
+            ],
+            'warnings' => $syncWarnings
         ];
         
     } catch (Exception $e) {

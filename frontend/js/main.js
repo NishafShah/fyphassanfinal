@@ -4,20 +4,6 @@
     if (window.location.protocol !== 'file:') {
         return;
     }
-
-    const normalizedPath = window.location.pathname.replace(/\\/g, '/');
-    const htdocsIndex = normalizedPath.toLowerCase().indexOf('/htdocs/');
-
-    if (htdocsIndex === -1) {
-        return;
-    }
-
-    const relativePath = normalizedPath.substring(htdocsIndex + '/htdocs'.length);
-    const localhostUrl = `http://localhost${relativePath}`;
-
-    if (window.location.href !== localhostUrl) {
-        window.location.replace(localhostUrl);
-    }
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -296,7 +282,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            return `http://localhost${projectRoot}/backend/api/command_handler.php`;
+            const backendOrigin = window.BACKEND_ORIGIN || localStorage.getItem('virtualai_backend_origin') || 'http://localhost';
+            return `${backendOrigin}${projectRoot}/backend/api/command_handler.php`;
         }
 
         return `${origin}${projectRoot}/backend/api/command_handler.php`;

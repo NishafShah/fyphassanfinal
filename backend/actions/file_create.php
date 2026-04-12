@@ -78,6 +78,7 @@ function createFile($input) {
     $filepath = $targetUploadsDir . $filename;
     $desktopFilepath = getDesktopFilePath($filename);
     $driveDFilepath = getDriveDFilePath($filename, $uploadsFolder);
+    $syncWarnings = [];
     
     try {
         if (file_put_contents($filepath, $content) === false) {
@@ -88,27 +89,11 @@ function createFile($input) {
         }
 
         if (!syncFileToDesktop($filename, $content)) {
-            if (file_exists($filepath)) {
-                unlink($filepath);
-            }
-
-            return [
-                'success' => false,
-                'message' => 'Failed to save file on the desktop.'
-            ];
+            $syncWarnings[] = 'Desktop mirror copy could not be created.';
         }
 
         if (!syncFileToDriveD($filename, $content, $uploadsFolder)) {
-            if (file_exists($filepath)) {
-                unlink($filepath);
-            }
-
-            removeDesktopFile($filename);
-
-            return [
-                'success' => false,
-                'message' => 'Failed to save file on D:\\.'
-            ];
+            $syncWarnings[] = 'D drive mirror copy could not be created.';
         }
         
         $filesize = strlen($content);
@@ -170,7 +155,8 @@ function createFile($input) {
                 'drive_d_filepath' => $driveDFilepath,
                 'uploads_folder' => $uploadsDirectoryName,
                 'uploads_path' => $uploadsDirectoryPath
-            ]
+            ],
+            'warnings' => $syncWarnings
         ];
         
     } catch (Exception $e) {

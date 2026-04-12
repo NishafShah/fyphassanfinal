@@ -2,7 +2,7 @@
 RewriteEngine On
 
 # Set base directory
-RewriteBase /virtual-assistant/backend/
+RewriteBase /pro2/VirtuAl/backend/
 
 # Handle CORS preflight requests
 RewriteCond %{REQUEST_METHOD} OPTIONS

@@ -99,20 +99,14 @@ for ($i = 0; $i < $fileCount; $i++) {
 
     $desktopPath = getDesktopFilePath($filename);
     $drivePath = getDriveDFilePath($filename, $folder);
+    $syncWarnings = [];
 
-    if (!syncFileToDesktop($filename, $content) || !syncFileToDriveD($filename, $content, $folder)) {
-        if (file_exists($destinationPath)) {
-            unlink($destinationPath);
-        }
-        if (file_exists($desktopPath)) {
-            unlink($desktopPath);
-        }
-        $responses[] = [
-            'filename' => $filename,
-            'success' => false,
-            'message' => 'Failed to sync file copies.'
-        ];
-        continue;
+    if (!syncFileToDesktop($filename, $content)) {
+        $syncWarnings[] = 'Desktop mirror copy could not be created.';
+    }
+
+    if (!syncFileToDriveD($filename, $content, $folder)) {
+        $syncWarnings[] = 'D drive mirror copy could not be created.';
     }
 
     $filesize = filesize($destinationPath);
@@ -136,7 +130,10 @@ for ($i = 0; $i < $fileCount; $i++) {
         $responses[] = [
             'filename' => $filename,
             'success' => true,
-            'uploads_path' => realpath($destinationPath) ?: $destinationPath
+            'uploads_path' => realpath($destinationPath) ?: $destinationPath,
+            'desktop_filepath' => $desktopPath,
+            'drive_d_filepath' => $drivePath,
+            'warnings' => $syncWarnings
         ];
     } catch (Exception $e) {
         if (file_exists($destinationPath)) {
