@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadFolderInput = document.getElementById('uploadFolder');
     const uploadBtn = document.getElementById('uploadBtn');
     const uploadStatus = document.getElementById('uploadStatus');
+    const uploadPanel = document.getElementById('uploadPanel');
     
     // Current chat ID and editing file
     let currentChatId = null;
@@ -453,6 +454,16 @@ document.addEventListener('DOMContentLoaded', function() {
             step: 0,
             data: {}
         };
+        setUploadPanelVisible(false);
+    }
+
+    function setUploadPanelVisible(visible) {
+        if (!uploadPanel) return;
+        uploadPanel.classList.toggle('upload-panel-hidden', !visible);
+
+        if (!visible && uploadStatus) {
+            uploadStatus.textContent = '';
+        }
     }
 
     function addMessageToDOM(content, isUser, shouldSave) {
@@ -1251,6 +1262,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== PROCESS COMMAND ====================
 
     async function processCommand(command) {
+        setUploadPanelVisible(command.action === 'start_email');
+
         switch(command.action) {
             case 'help':
                 addMessage('<p>Here are the commands I understand (English & Roman Urdu):</p><ul style="margin: 12px 0 0 20px;"><li><strong>Send email / Email bhejo</strong> - I\'ll guide you step by step</li><li><strong>Create file / File banao</strong> - I\'ll ask for extension, name, and content</li><li><strong>Read file / File dikhao</strong> - Shows file contents</li><li><strong>Edit file / File edit karo</strong> - Opens file in editor for you to modify</li><li><strong>Delete file / File hatao</strong> - I\'ll ask you which file to delete</li><li><strong>Search files / File dhundo</strong> - Search for files by name</li></ul><p style="margin-top: 12px;">Just type a command or click the microphone to speak!</p><p style="margin-top: 8px; color: var(--color-gray-400);">Tip: You can say "cancel" or "band karo" at any time to abort an operation.</p>');
@@ -1359,9 +1372,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     quickCmds.forEach(function(cmd) {
         cmd.addEventListener('click', function() {
-            const command = this.dataset.cmd;
-            chatInput.value = command;
-            sendMessage();
+            const commandText = (this.dataset.cmd || '').trim();
+            if (!commandText) return;
+
+            // Quick command buttons should always start a fresh command flow.
+            if (conversationState.active) {
+                resetConversation();
+            }
+
+            addMessage('<p>' + escapeHtml(commandText) + '</p>', true);
+            const parsed = parseCommand(commandText);
+            processCommand(parsed);
+
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
         });
     });
 
@@ -1447,5 +1471,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Initialize
+    setUploadPanelVisible(false);
     initializeChat();
 });

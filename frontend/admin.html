@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - VirtualAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body data-require-auth="true" data-require-admin="true">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                    <circle cx="7.5" cy="14.5" r="1.5"/>
+                    <circle cx="16.5" cy="14.5" r="1.5"/>
+                </svg>
+                <span>VirtualAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="files.html">Files</a>
+                <a href="admin.html" class="active">Admin</a>
+                <a href="about.html">About</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="dashboard" style="padding-top: 40px;">
+        <div class="container">
+            <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+                <div>
+                    <h1>Admin Email Panel</h1>
+                    <p>Track all users and how many emails each user has sent.</p>
+                    <p style="margin-top: 4px; font-size: 14px; color: var(--color-gray-600);">Signed in as <strong id="currentUserName">Admin</strong></p>
+                </div>
+                <button id="refreshAdminBtn" class="btn btn-secondary" type="button">Refresh</button>
+            </div>
+
+            <div id="adminAlert" style="margin-bottom: 16px;"></div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px;">
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Total Users</p><h3 id="totalUsers" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Emails Sent</p><h3 id="totalSent" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Emails Failed</p><h3 id="totalFailed" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">All Email Logs</p><h3 id="totalAll" style="margin-top:6px;">0</h3></div>
+            </div>
+
+            <div class="card" style="margin-bottom:18px;">
+                <div class="card-header">
+                    <h3 class="card-title">User Summary</h3>
+                </div>
+                <div style="overflow:auto;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left;border-bottom:1px solid var(--color-gray-200);">
+                                <th style="padding:10px;">User</th>
+                                <th style="padding:10px;">Role</th>
+                                <th style="padding:10px;">Sent</th>
+                                <th style="padding:10px;">Failed</th>
+                                <th style="padding:10px;">Total</th>
+                                <th style="padding:10px;">Last Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersBody">
+                            <tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user summary...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Email Logs</h3>
+                </div>
+                <div style="overflow:auto;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left;border-bottom:1px solid var(--color-gray-200);">
+                                <th style="padding:10px;">Date</th>
+                                <th style="padding:10px;">User</th>
+                                <th style="padding:10px;">From</th>
+                                <th style="padding:10px;">To</th>
+                                <th style="padding:10px;">Subject</th>
+                                <th style="padding:10px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminEmailsBody">
+                            <tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading email logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
+

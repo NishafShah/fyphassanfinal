@@ -71,6 +71,38 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================
+-- Users table - stores login and register accounts
+-- =========================================
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    is_admin TINYINT(1) NOT NULL DEFAULT 0,
+    last_login_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_users_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================
+-- Emails table - stores assistant email events per logged-in user
+-- =========================================
+CREATE TABLE IF NOT EXISTS emails (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT DEFAULT NULL,
+    sender VARCHAR(255) DEFAULT NULL,
+    recipient VARCHAR(255) NOT NULL,
+    subject VARCHAR(500) NOT NULL,
+    message TEXT,
+    token VARCHAR(255) DEFAULT NULL,
+    status ENUM('sent', 'failed') DEFAULT 'sent',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_emails_user_id (user_id),
+    INDEX idx_emails_status (status),
+    INDEX idx_emails_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================
 -- Activity log table - general activity tracking
 -- =========================================
 CREATE TABLE IF NOT EXISTS activity_log (

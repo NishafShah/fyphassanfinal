@@ -91,18 +91,36 @@ function initDatabase() {
         ");
 
         ensureFilesTableSchema($pdo);
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                is_admin TINYINT(1) NOT NULL DEFAULT 0,
+                last_login_at TIMESTAMP NULL DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        ensureUsersTableSchema($pdo);
         
         // Create emails table for logging sent emails
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS emails (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT DEFAULT NULL,
                 sender VARCHAR(255) DEFAULT NULL,
                 recipient VARCHAR(255) NOT NULL,
                 subject VARCHAR(500) NOT NULL,
                 message TEXT,
                 token VARCHAR(255) DEFAULT NULL,
                 status ENUM('sent', 'failed') DEFAULT 'sent',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_emails_user_id (user_id),
+                INDEX idx_emails_status (status),
+                INDEX idx_emails_created_at (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
@@ -238,8 +256,49 @@ function ensureFilesTableSchema($pdo) {
     }
 }
 
+function ensureUsersTableSchema($pdo) {
+    $columns = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!in_array('name', $columns, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT '' AFTER id");
+    }
+
+    if (!in_array('email', $columns, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(255) NOT NULL DEFAULT '' AFTER name");
+    }
+
+    if (!in_array('password_hash', $columns, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255) NOT NULL DEFAULT '' AFTER email");
+    }
+
+    if (!in_array('last_login_at', $columns, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL AFTER password_hash");
+    }
+
+    if (!in_array('is_admin', $columns, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0 AFTER password_hash");
+    }
+
+    $indexes = $pdo->query("SHOW INDEX FROM users")->fetchAll(PDO::FETCH_ASSOC);
+    $hasEmailUnique = false;
+    foreach ($indexes as $index) {
+        if (($index['Column_name'] ?? '') === 'email' && (int) ($index['Non_unique'] ?? 1) === 0) {
+            $hasEmailUnique = true;
+            break;
+        }
+    }
+
+    if (!$hasEmailUnique) {
+        $pdo->exec("ALTER TABLE users ADD UNIQUE KEY unique_user_email (email)");
+    }
+}
+
 function ensureEmailsTableSchema($pdo) {
     $columns = $pdo->query("SHOW COLUMNS FROM emails")->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!in_array('user_id', $columns, true)) {
+        $pdo->exec("ALTER TABLE emails ADD COLUMN user_id INT DEFAULT NULL AFTER id");
+    }
 
     if (!in_array('sender', $columns, true)) {
         $pdo->exec("ALTER TABLE emails ADD COLUMN sender VARCHAR(255) DEFAULT NULL AFTER id");
@@ -247,6 +306,19 @@ function ensureEmailsTableSchema($pdo) {
 
     if (!in_array('token', $columns, true)) {
         $pdo->exec("ALTER TABLE emails ADD COLUMN token VARCHAR(255) DEFAULT NULL AFTER message");
+    }
+
+    $indexes = $pdo->query("SHOW INDEX FROM emails")->fetchAll(PDO::FETCH_ASSOC);
+    $hasUserIdIndex = false;
+    foreach ($indexes as $index) {
+        if (($index['Column_name'] ?? '') === 'user_id') {
+            $hasUserIdIndex = true;
+            break;
+        }
+    }
+
+    if (!$hasUserIdIndex) {
+        $pdo->exec("ALTER TABLE emails ADD INDEX idx_emails_user_id (user_id)");
     }
 }
 

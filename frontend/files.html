@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-require-auth="true">
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
@@ -22,8 +22,10 @@
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="dashboard.html">Dashboard</a>
+                <a href="admin.html" data-admin-link="true" style="display:none;">Admin</a>
                 <a href="about.html">About</a>
                 <a href="contact.html">Contact</a>
+                <a href="#" id="logoutBtn">Logout</a>
             </div>
             <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation menu">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -39,8 +41,10 @@
     <div class="mobile-menu" id="mobileMenu">
         <a href="index.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
+        <a href="admin.html" data-admin-link="true" style="display:none;">Admin</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
+        <a href="#" id="logoutBtnMobile">Logout</a>
     </div>
 
     <!-- Dashboard -->
@@ -80,6 +84,7 @@
                     <div>
                         <h1>My Files</h1>
                         <p>View and manage all your files in one place</p>
+                        <p style="margin-top: 4px; font-size: 14px; color: var(--color-gray-600);">Signed in as <strong id="currentUserName">User</strong></p>
                     </div>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                         <div style="position: relative;">
@@ -245,6 +250,7 @@
     </div>
 
     <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/files.js"></script>
 </body>
 </html>

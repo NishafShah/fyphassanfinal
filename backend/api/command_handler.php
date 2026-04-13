@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../helpers/auth.php';
 
 // Initialize database
 initDatabase();
@@ -34,6 +35,10 @@ if (!$input || !isset($input['action'])) {
 
 $action = $input['action'];
 $response = ['success' => false, 'message' => 'Unknown action'];
+
+if ($action !== 'contact') {
+    requireAuthenticatedUser();
+}
 
 switch ($action) {
     case 'create':

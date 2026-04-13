@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../helpers/auth.php';
 
 // Include PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
@@ -56,6 +57,8 @@ function sendEmail($input) {
     $subject = $input['subject'];
     $messageBody = $input['message'];
     $token = generateEmailToken($from, $to, $subject);
+    $currentUser = getAuthenticatedUser();
+    $currentUserId = $currentUser['id'] ?? null;
     
     try {
         $attachments = extractAttachmentsFromInput($input);
@@ -134,11 +137,12 @@ function sendEmail($input) {
         
         // Log to database
         $stmt = $pdo->prepare("
-            INSERT INTO emails (sender, recipient, subject, message, token, status)
-            VALUES (:sender, :recipient, :subject, :message, :token, :status)
+            INSERT INTO emails (user_id, sender, recipient, subject, message, token, status)
+            VALUES (:user_id, :sender, :recipient, :subject, :message, :token, :status)
         ");
         
         $stmt->execute([
+            ':user_id' => $currentUserId,
             ':sender' => $from,
             ':recipient' => $to,
             ':subject' => $subject,
@@ -172,11 +176,12 @@ function sendEmail($input) {
         // Log failed attempt
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO emails (sender, recipient, subject, message, token, status)
-                VALUES (:sender, :recipient, :subject, :message, :token, 'failed')
+                INSERT INTO emails (user_id, sender, recipient, subject, message, token, status)
+                VALUES (:user_id, :sender, :recipient, :subject, :message, :token, 'failed')
             ");
             
             $stmt->execute([
+                ':user_id' => $currentUserId,
                 ':sender' => $from,
                 ':recipient' => $to,
                 ':subject' => $subject,

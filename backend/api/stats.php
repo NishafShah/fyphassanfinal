@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once '../config/db.php';
+require_once '../helpers/auth.php';
+requireAuthenticatedUser();
 
 try {
     $db = Database::getInstance();
