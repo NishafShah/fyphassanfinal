@@ -115,7 +115,7 @@
 
             <div class="card" style="margin-top:18px;">
                 <div class="card-header">
-                    <h3 class="card-title">Recent User Files (Uploaded + Created)</h3>
+                    <h3 class="card-title">Recent Uploaded Files (Per User)</h3>
                 </div>
                 <div style="overflow:auto;">
                     <table style="width:100%;border-collapse:collapse;">
@@ -124,13 +124,34 @@
                                 <th style="padding:10px;">Date</th>
                                 <th style="padding:10px;">User</th>
                                 <th style="padding:10px;">Filename</th>
-                                <th style="padding:10px;">Type</th>
                                 <th style="padding:10px;">Size</th>
                                 <th style="padding:10px;">Folder</th>
                             </tr>
                         </thead>
-                        <tbody id="adminFilesBody">
-                            <tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user files...</td></tr>
+                        <tbody id="adminUploadedFilesBody">
+                            <tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">Loading uploaded files...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:18px;">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Created Files (Per User)</h3>
+                </div>
+                <div style="overflow:auto;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left;border-bottom:1px solid var(--color-gray-200);">
+                                <th style="padding:10px;">Date</th>
+                                <th style="padding:10px;">User</th>
+                                <th style="padding:10px;">Filename</th>
+                                <th style="padding:10px;">Size</th>
+                                <th style="padding:10px;">Folder</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminCreatedFilesBody">
+                            <tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">Loading created files...</td></tr>
                         </tbody>
                     </table>
                 </div>

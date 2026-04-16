@@ -151,6 +151,12 @@ try {
     $filesStmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $filesStmt->execute();
     $files = $filesStmt->fetchAll(PDO::FETCH_ASSOC);
+    $uploadedFiles = array_values(array_filter($files, function ($item) {
+        return ($item['created_via'] ?? '') === 'uploaded';
+    }));
+    $createdFiles = array_values(array_filter($files, function ($item) {
+        return ($item['created_via'] ?? 'created') !== 'uploaded';
+    }));
 
     $totalsSql = "
         SELECT
@@ -185,7 +191,9 @@ try {
         ],
         'users' => $users,
         'emails' => $emails,
-        'files' => $files
+        'files' => $files,
+        'uploaded_files' => $uploadedFiles,
+        'created_files' => $createdFiles
     ]);
 } catch (Exception $e) {
     echo json_encode([

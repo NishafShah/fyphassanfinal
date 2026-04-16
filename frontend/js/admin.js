@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalFiles = document.getElementById('totalFiles');
     const refreshBtn = document.getElementById('refreshAdminBtn');
     const alertBox = document.getElementById('adminAlert');
-    const filesBody = document.getElementById('adminFilesBody');
+    const uploadedFilesBody = document.getElementById('adminUploadedFilesBody');
+    const createdFilesBody = document.getElementById('adminCreatedFilesBody');
     const userSearchInput = document.getElementById('userSearchInput');
     const emailSearchInput = document.getElementById('emailSearchInput');
 
@@ -80,7 +81,8 @@ document.addEventListener('DOMContentLoaded', function () {
     async function loadAdminData() {
         usersBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user summary...</td></tr>';
         emailsBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading email logs...</td></tr>';
-        filesBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user files...</td></tr>';
+        uploadedFilesBody.innerHTML = '<tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">Loading uploaded files...</td></tr>';
+        createdFilesBody.innerHTML = '<tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">Loading created files...</td></tr>';
 
         try {
             const userSearch = userSearchInput ? userSearchInput.value.trim() : '';
@@ -139,17 +141,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 }).join('');
             }
 
-            const files = Array.isArray(data.files) ? data.files : [];
-            if (!files.length) {
-                filesBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">No user files found.</td></tr>';
+            const uploadedFiles = Array.isArray(data.uploaded_files)
+                ? data.uploaded_files
+                : (Array.isArray(data.files) ? data.files.filter(function (f) { return (f.created_via || '') === 'uploaded'; }) : []);
+            const createdFiles = Array.isArray(data.created_files)
+                ? data.created_files
+                : (Array.isArray(data.files) ? data.files.filter(function (f) { return (f.created_via || 'created') !== 'uploaded'; }) : []);
+
+            if (!uploadedFiles.length) {
+                uploadedFilesBody.innerHTML = '<tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">No uploaded files found.</td></tr>';
             } else {
-                filesBody.innerHTML = files.map(function (f) {
-                    const via = (f.created_via || 'created') === 'uploaded' ? 'Uploaded' : 'Created';
+                uploadedFilesBody.innerHTML = uploadedFiles.map(function (f) {
                     return `<tr style="border-bottom:1px solid var(--color-gray-100);">
                         <td style="padding:10px;">${escapeHtml(formatDate(f.created_at))}</td>
                         <td style="padding:10px;"><strong>${escapeHtml(f.user_name || 'Unknown')}</strong><br><span style="font-size:12px;color:var(--color-gray-500);">${escapeHtml(f.user_email || '')}</span></td>
                         <td style="padding:10px;">${escapeHtml(f.filename || '')}</td>
-                        <td style="padding:10px;">${escapeHtml(via)}</td>
+                        <td style="padding:10px;">${escapeHtml(formatBytes(f.size))}</td>
+                        <td style="padding:10px;">${escapeHtml(f.folder || '-')}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            if (!createdFiles.length) {
+                createdFilesBody.innerHTML = '<tr><td colspan="5" style="padding:12px;color:var(--color-gray-500);">No created files found.</td></tr>';
+            } else {
+                createdFilesBody.innerHTML = createdFiles.map(function (f) {
+                    return `<tr style="border-bottom:1px solid var(--color-gray-100);">
+                        <td style="padding:10px;">${escapeHtml(formatDate(f.created_at))}</td>
+                        <td style="padding:10px;"><strong>${escapeHtml(f.user_name || 'Unknown')}</strong><br><span style="font-size:12px;color:var(--color-gray-500);">${escapeHtml(f.user_email || '')}</span></td>
+                        <td style="padding:10px;">${escapeHtml(f.filename || '')}</td>
                         <td style="padding:10px;">${escapeHtml(formatBytes(f.size))}</td>
                         <td style="padding:10px;">${escapeHtml(f.folder || '-')}</td>
                     </tr>`;
