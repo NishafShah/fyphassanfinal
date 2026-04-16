@@ -83,10 +83,15 @@ function initDatabase() {
                 filename VARCHAR(255) NOT NULL UNIQUE,
                 filepath VARCHAR(500) NOT NULL,
                 desktop_filepath VARCHAR(500) DEFAULT NULL,
+                user_id INT DEFAULT NULL,
+                created_via VARCHAR(20) DEFAULT 'created',
                 size INT DEFAULT 0,
                 mime_type VARCHAR(100) DEFAULT 'text/plain',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_files_user_id (user_id),
+                INDEX idx_files_created_via (created_via),
+                INDEX idx_files_created_at (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
@@ -211,6 +216,14 @@ function ensureFilesTableSchema($pdo) {
         $pdo->exec("ALTER TABLE files ADD COLUMN desktop_filepath VARCHAR(500) DEFAULT NULL");
     }
 
+    if (!in_array('user_id', $columns, true)) {
+        $pdo->exec("ALTER TABLE files ADD COLUMN user_id INT DEFAULT NULL AFTER desktop_filepath");
+    }
+
+    if (!in_array('created_via', $columns, true)) {
+        $pdo->exec("ALTER TABLE files ADD COLUMN created_via VARCHAR(20) DEFAULT 'created' AFTER user_id");
+    }
+
     if (in_array('name', $columns, true)) {
         $pdo->exec("UPDATE files SET name = filename WHERE filename IS NOT NULL AND (name IS NULL OR name = '')");
         $pdo->exec("ALTER TABLE files MODIFY name VARCHAR(255) NULL");
@@ -253,6 +266,18 @@ function ensureFilesTableSchema($pdo) {
 
     if (!$hasFilenameUnique) {
         $pdo->exec("ALTER TABLE files ADD UNIQUE KEY unique_filename (filename)");
+    }
+
+    $hasUserIdIndex = false;
+    foreach ($indexes as $index) {
+        if (($index['Column_name'] ?? '') === 'user_id') {
+            $hasUserIdIndex = true;
+            break;
+        }
+    }
+
+    if (!$hasUserIdIndex) {
+        $pdo->exec("ALTER TABLE files ADD INDEX idx_files_user_id (user_id)");
     }
 }
 

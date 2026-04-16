@@ -726,9 +726,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (matchesCommand(input, voiceCommands.delete)) {
             const filename = extractFilename(input);
             if (filename) {
-                return { action: 'start_delete_file', filename: filename };
+                return { action: 'start_delete_file', filename: filename, raw_input: input };
             }
-            return { action: 'start_delete_file' };
+            return { action: 'start_delete_file', raw_input: input };
         }
         
         // Search file commands
@@ -934,6 +934,74 @@ document.addEventListener('DOMContentLoaded', function() {
         const folderLine = fileData.folder ? '<p><strong>Folder:</strong> ' + escapeHtml(fileData.folder) + '</p>' : '';
 
         addMessage('<p>Ready to create the file:</p><div style="background: var(--color-gray-100); padding: 16px; border-radius: 8px; margin: 12px 0; border: 1px solid var(--color-gray-200);"><p><strong>Filename:</strong> ' + escapeHtml(fileData.filename) + '</p>' + folderLine + '<p><strong>Content:</strong> ' + contentPreview + '</p></div><p>Type <strong>"yes"</strong> or <strong>"haan"</strong> to create this file, or <strong>"cancel"</strong> to abort.</p>');
+    }
+
+    function parseCombinedDeleteInput(input) {
+        const normalized = input.replace(/\r\n/g, '\n').trim();
+        if (!normalized) return null;
+
+        const lines = normalized.split('\n');
+        const files = [];
+        const folders = [];
+
+        function pushCsvTo(target, raw) {
+            raw.split(',').forEach(function(part) {
+                const item = part.trim();
+                if (item) target.push(item);
+            });
+        }
+
+        lines.forEach(function(rawLine) {
+            const line = rawLine.trim();
+            if (!line) return;
+
+            const fileMatch = line.match(/^files?\s*:\s*(.+)$/i);
+            if (fileMatch) {
+                pushCsvTo(files, fileMatch[1]);
+                return;
+            }
+
+            const folderMatch = line.match(/^folders?\s*:\s*(.+)$/i);
+            if (folderMatch) {
+                pushCsvTo(folders, folderMatch[1]);
+                return;
+            }
+        });
+
+        const inlineFileMatches = Array.from(normalized.matchAll(/\bfile\s*:?\s*([a-zA-Z0-9_\-]+\.[a-zA-Z0-9]+)/gi)).map(m => m[1]);
+        const inlineFolderMatches = Array.from(normalized.matchAll(/\bfolder\s*:?\s*([a-zA-Z0-9_\-]+)/gi)).map(m => m[1]);
+
+        files.push.apply(files, inlineFileMatches);
+        folders.push.apply(folders, inlineFolderMatches);
+
+        const cleanedFiles = Array.from(new Set(files.map(function(f) {
+            return sanitizeConversationFilename(f);
+        }).filter(Boolean)));
+
+        const cleanedFolders = Array.from(new Set(folders.map(function(f) {
+            return sanitizeConversationFolder(f);
+        }).filter(Boolean)));
+
+        if (!cleanedFiles.length && !cleanedFolders.length) {
+            const justFilename = extractFilename(normalized);
+            if (justFilename && normalized.trim() === justFilename) {
+                return { files: [justFilename], folders: [] };
+            }
+            return null;
+        }
+
+        return { files: cleanedFiles, folders: cleanedFolders };
+    }
+
+    function showDeleteItemsSummary(deleteData) {
+        const filesLine = deleteData.files && deleteData.files.length
+            ? '<p><strong>Files:</strong> ' + deleteData.files.map(escapeHtml).join(', ') + '</p>'
+            : '<p><strong>Files:</strong> none</p>';
+        const foldersLine = deleteData.folders && deleteData.folders.length
+            ? '<p><strong>Folders:</strong> ' + deleteData.folders.map(escapeHtml).join(', ') + '</p>'
+            : '<p><strong>Folders:</strong> none</p>';
+
+        addMessage('<p>Ready to delete these items:</p><div style="background: var(--color-gray-100); padding: 16px; border-radius: 8px; margin: 12px 0; border: 1px solid var(--color-gray-200);">' + filesLine + foldersLine + '</div><p>Type <strong>"yes"</strong> or <strong>"haan"</strong> to confirm, or <strong>"cancel"</strong> to abort.</p>');
     }
 
     // ==================== CONVERSATION HANDLERS ====================
@@ -1231,24 +1299,40 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleDeleteFileConversation(input) {
         switch(conversationState.step) {
             case 1:
-                conversationState.data.filename = input;
+                const combinedDelete = parseCombinedDeleteInput(input);
+                if (!combinedDelete) {
+                    addMessage('<p>Please send delete details in a single prompt. Example:</p><pre style="background: var(--color-gray-100); color: var(--color-primary); padding: 12px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-gray-200); white-space: pre-wrap;">Files: report.txt, notes.md\nFolders: reports, archive</pre><p style="margin-top:8px;">You can also use inline form: <code>delete file: report.txt folder: reports</code>.</p>');
+                    return;
+                }
+
+                conversationState.data.files = combinedDelete.files || [];
+                conversationState.data.folders = combinedDelete.folders || [];
                 conversationState.step = 2;
-                addMessage('<p>Are you sure you want to delete <strong>' + escapeHtml(input) + '</strong>? This action cannot be undone.</p><p>Type <strong>"yes"</strong> or <strong>"haan"</strong> to confirm deletion, or <strong>"cancel"</strong> to abort.</p>');
+                showDeleteItemsSummary(conversationState.data);
                 break;
                 
             case 2:
                 if (isConfirmCommand(input)) {
                     showTyping();
                     const result = await apiRequest({
-                        action: 'delete',
-                        filename: conversationState.data.filename
+                        action: 'delete_items',
+                        files: conversationState.data.files || [],
+                        folders: conversationState.data.folders || []
                     });
                     hideTyping();
                     
                     if (result.success) {
-                        addMessage('<p style="color: var(--color-success);">File <strong>' + escapeHtml(conversationState.data.filename) + '</strong> deleted successfully!</p>');
+                        const deletedFiles = Array.isArray(result.deleted_files) ? result.deleted_files : [];
+                        const deletedFolders = Array.isArray(result.deleted_folders) ? result.deleted_folders : [];
+                        const errors = Array.isArray(result.errors) ? result.errors : [];
+
+                        const filesHtml = deletedFiles.length ? '<p><strong>Deleted files:</strong> ' + deletedFiles.map(escapeHtml).join(', ') + '</p>' : '';
+                        const foldersHtml = deletedFolders.length ? '<p><strong>Deleted folders:</strong> ' + deletedFolders.map(escapeHtml).join(', ') + '</p>' : '';
+                        const errorsHtml = errors.length ? '<p style="color: var(--color-warning);"><strong>Skipped:</strong> ' + errors.map(escapeHtml).join(' | ') + '</p>' : '';
+
+                        addMessage('<p style="color: var(--color-success);">Delete completed.</p>' + filesHtml + foldersHtml + errorsHtml);
                     } else {
-                        addMessage('<p style="color: var(--color-error);">Failed to delete file: ' + escapeHtml(result.message) + '</p>');
+                        addMessage('<p style="color: var(--color-error);">Delete failed: ' + escapeHtml(result.message) + '</p>');
                     }
                     resetConversation();
                 } else {
@@ -1308,10 +1392,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             case 'start_delete_file':
                 conversationState = { active: true, type: 'delete_file', step: 1, data: {} };
-                if (command.filename) {
+                if (command.raw_input) {
+                    await handleDeleteFileConversation(command.raw_input);
+                } else if (command.filename) {
                     await handleDeleteFileConversation(command.filename);
                 } else {
-                    addMessage('<p>Which file would you like to delete? Please enter the <strong>filename</strong>:</p>');
+                    addMessage('<p>I can delete files and folders in one prompt. Use this format:</p><pre style="background: var(--color-gray-100); color: var(--color-primary); padding: 12px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-gray-200); white-space: pre-wrap;">Files: report.txt, notes.md\nFolders: reports</pre><p style="margin-top:8px;">You can also write inline: <code>delete file: report.txt folder: reports</code>.</p>');
                 }
                 break;
                 

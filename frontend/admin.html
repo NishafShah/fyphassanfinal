@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - VirtualAI</title>
+    <title>Admin Analytics - VirtualAI</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -32,8 +32,8 @@
         <div class="container">
             <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
                 <div>
-                    <h1>Admin Email Panel</h1>
-                    <p>Track all users and how many emails each user has sent.</p>
+                    <h1>Admin Analytics Panel</h1>
+                    <p>Track user emails, uploads, and created files with search filters.</p>
                     <p style="margin-top: 4px; font-size: 14px; color: var(--color-gray-600);">Signed in as <strong id="currentUserName">Admin</strong></p>
                 </div>
                 <button id="refreshAdminBtn" class="btn btn-secondary" type="button">Refresh</button>
@@ -46,6 +46,25 @@
                 <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Emails Sent</p><h3 id="totalSent" style="margin-top:6px;">0</h3></div>
                 <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Emails Failed</p><h3 id="totalFailed" style="margin-top:6px;">0</h3></div>
                 <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">All Email Logs</p><h3 id="totalAll" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Uploaded Files</p><h3 id="totalUploaded" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">Created Files</p><h3 id="totalCreated" style="margin-top:6px;">0</h3></div>
+                <div class="card"><p style="color:var(--color-gray-500);font-size:13px;">All Files</p><h3 id="totalFiles" style="margin-top:6px;">0</h3></div>
+            </div>
+
+            <div class="card" style="margin-bottom:18px;">
+                <div class="card-header">
+                    <h3 class="card-title">Search Filters</h3>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+                    <div>
+                        <label for="userSearchInput" class="form-label">Search User (name or email)</label>
+                        <input id="userSearchInput" class="form-input" type="text" placeholder="e.g. nishaf or user@gmail.com">
+                    </div>
+                    <div>
+                        <label for="emailSearchInput" class="form-label">Search User Emails (to/from/subject)</label>
+                        <input id="emailSearchInput" class="form-input" type="text" placeholder="e.g. gmail.com or project subject">
+                    </div>
+                </div>
             </div>
 
             <div class="card" style="margin-bottom:18px;">
@@ -93,6 +112,29 @@
                     </table>
                 </div>
             </div>
+
+            <div class="card" style="margin-top:18px;">
+                <div class="card-header">
+                    <h3 class="card-title">Recent User Files (Uploaded + Created)</h3>
+                </div>
+                <div style="overflow:auto;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left;border-bottom:1px solid var(--color-gray-200);">
+                                <th style="padding:10px;">Date</th>
+                                <th style="padding:10px;">User</th>
+                                <th style="padding:10px;">Filename</th>
+                                <th style="padding:10px;">Type</th>
+                                <th style="padding:10px;">Size</th>
+                                <th style="padding:10px;">Folder</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminFilesBody">
+                            <tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user files...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -101,4 +143,3 @@
     <script src="js/admin.js"></script>
 </body>
 </html>
-

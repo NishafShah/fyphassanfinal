@@ -5,8 +5,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSent = document.getElementById('totalSent');
     const totalFailed = document.getElementById('totalFailed');
     const totalAll = document.getElementById('totalAll');
+    const totalUploaded = document.getElementById('totalUploaded');
+    const totalCreated = document.getElementById('totalCreated');
+    const totalFiles = document.getElementById('totalFiles');
     const refreshBtn = document.getElementById('refreshAdminBtn');
     const alertBox = document.getElementById('adminAlert');
+    const filesBody = document.getElementById('adminFilesBody');
+    const userSearchInput = document.getElementById('userSearchInput');
+    const emailSearchInput = document.getElementById('emailSearchInput');
 
     function getAdminApiUrl() {
         if (typeof window.resolveBackendUrl === 'function') {
@@ -58,12 +64,33 @@ document.addEventListener('DOMContentLoaded', function () {
         return d.toLocaleString();
     }
 
+    function formatBytes(bytes) {
+        const n = Number(bytes) || 0;
+        if (!n) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let i = 0;
+        let value = n;
+        while (value >= 1024 && i < units.length - 1) {
+            value /= 1024;
+            i += 1;
+        }
+        return `${value.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+    }
+
     async function loadAdminData() {
         usersBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user summary...</td></tr>';
         emailsBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading email logs...</td></tr>';
+        filesBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">Loading user files...</td></tr>';
 
         try {
-            const res = await fetch(getAdminApiUrl() + '?limit=300', { credentials: 'same-origin' });
+            const userSearch = userSearchInput ? userSearchInput.value.trim() : '';
+            const emailSearch = emailSearchInput ? emailSearchInput.value.trim() : '';
+            const params = new URLSearchParams();
+            params.set('limit', '300');
+            if (userSearch) params.set('user_search', userSearch);
+            if (emailSearch) params.set('email_search', emailSearch);
+
+            const res = await fetch(getAdminApiUrl() + '?' + params.toString(), { credentials: 'same-origin' });
             const data = await res.json();
 
             if (!data.success) {
@@ -75,6 +102,9 @@ document.addEventListener('DOMContentLoaded', function () {
             totalSent.textContent = data.summary.sent_total || 0;
             totalFailed.textContent = data.summary.failed_total || 0;
             totalAll.textContent = data.summary.all_total || 0;
+            totalUploaded.textContent = data.summary.uploaded_total || 0;
+            totalCreated.textContent = data.summary.created_total || 0;
+            totalFiles.textContent = data.summary.files_total || 0;
 
             const users = Array.isArray(data.users) ? data.users : [];
             if (!users.length) {
@@ -108,6 +138,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     </tr>`;
                 }).join('');
             }
+
+            const files = Array.isArray(data.files) ? data.files : [];
+            if (!files.length) {
+                filesBody.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--color-gray-500);">No user files found.</td></tr>';
+            } else {
+                filesBody.innerHTML = files.map(function (f) {
+                    const via = (f.created_via || 'created') === 'uploaded' ? 'Uploaded' : 'Created';
+                    return `<tr style="border-bottom:1px solid var(--color-gray-100);">
+                        <td style="padding:10px;">${escapeHtml(formatDate(f.created_at))}</td>
+                        <td style="padding:10px;"><strong>${escapeHtml(f.user_name || 'Unknown')}</strong><br><span style="font-size:12px;color:var(--color-gray-500);">${escapeHtml(f.user_email || '')}</span></td>
+                        <td style="padding:10px;">${escapeHtml(f.filename || '')}</td>
+                        <td style="padding:10px;">${escapeHtml(via)}</td>
+                        <td style="padding:10px;">${escapeHtml(formatBytes(f.size))}</td>
+                        <td style="padding:10px;">${escapeHtml(f.folder || '-')}</td>
+                    </tr>`;
+                }).join('');
+            }
         } catch (error) {
             showAlert('error', 'Network error while loading admin analytics.');
         }
@@ -117,6 +164,18 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshBtn.addEventListener('click', loadAdminData);
     }
 
+    function wireSearchInput(input) {
+        if (!input) return;
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadAdminData();
+            }
+        });
+    }
+
+    wireSearchInput(userSearchInput);
+    wireSearchInput(emailSearchInput);
+
     loadAdminData();
 });
-

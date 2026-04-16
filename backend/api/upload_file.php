@@ -22,6 +22,8 @@ if (!$pdo) {
     ]);
     exit;
 }
+$currentUser = getAuthenticatedUser();
+$currentUserId = $currentUser['id'] ?? null;
 
 $folder = sanitizeUploadFolder($_POST['folder'] ?? '');
 
@@ -115,19 +117,41 @@ for ($i = 0; $i < $fileCount; $i++) {
     $mimeType = getMimeType($filename);
 
     try {
-        $stmt = $pdo->prepare("
-            INSERT INTO files (filename, filepath, desktop_filepath, size, mime_type, folder)
-            VALUES (:filename, :filepath, :desktop_filepath, :size, :mime_type, :folder)
-        ");
-
-        $stmt->execute([
+        $columns = $pdo->query("SHOW COLUMNS FROM files")->fetchAll(PDO::FETCH_COLUMN);
+        $insertColumns = ['filename', 'filepath', 'desktop_filepath', 'size', 'mime_type'];
+        $insertValues = [
             ':filename' => $filename,
             ':filepath' => $destinationPath,
             ':desktop_filepath' => $desktopPath,
             ':size' => $filesize,
-            ':mime_type' => $mimeType,
-            ':folder' => $folder
-        ]);
+            ':mime_type' => $mimeType
+        ];
+
+        if (in_array('folder', $columns, true)) {
+            $insertColumns[] = 'folder';
+            $insertValues[':folder'] = $folder;
+        }
+
+        if (in_array('user_id', $columns, true)) {
+            $insertColumns[] = 'user_id';
+            $insertValues[':user_id'] = $currentUserId;
+        }
+
+        if (in_array('created_via', $columns, true)) {
+            $insertColumns[] = 'created_via';
+            $insertValues[':created_via'] = 'uploaded';
+        }
+
+        $placeholders = array_map(function ($column) {
+            return ':' . $column;
+        }, $insertColumns);
+
+        $stmt = $pdo->prepare("
+            INSERT INTO files (" . implode(', ', $insertColumns) . ")
+            VALUES (" . implode(', ', $placeholders) . ")
+        ");
+
+        $stmt->execute($insertValues);
 
         $responses[] = [
             'filename' => $filename,

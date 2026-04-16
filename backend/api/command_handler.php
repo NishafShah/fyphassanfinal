@@ -60,6 +60,11 @@ switch ($action) {
         require_once __DIR__ . '/../actions/file_delete.php';
         $response = deleteFile($input);
         break;
+
+    case 'delete_items':
+        require_once __DIR__ . '/../actions/file_delete.php';
+        $response = deleteItems($input);
+        break;
         
     case 'search':
         require_once __DIR__ . '/../actions/file_search.php';

@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../helpers/auth.php';
 
 function createFile($input) {
     // Validate input
@@ -37,6 +38,8 @@ function createFile($input) {
     }
     
     $pdo = getDbConnection();
+    $currentUser = getAuthenticatedUser();
+    $currentUserId = $currentUser['id'] ?? null;
     
     if (!$pdo) {
         return [
@@ -109,6 +112,16 @@ function createFile($input) {
             ':size' => $filesize,
             ':mime_type' => $mimeType
         ];
+
+        if (in_array('user_id', $columns, true)) {
+            $insertColumns[] = 'user_id';
+            $insertValues[':user_id'] = $currentUserId;
+        }
+
+        if (in_array('created_via', $columns, true)) {
+            $insertColumns[] = 'created_via';
+            $insertValues[':created_via'] = 'created';
+        }
 
         if (in_array('name', $columns, true)) {
             $insertColumns[] = 'name';

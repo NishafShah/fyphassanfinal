@@ -14,13 +14,17 @@ CREATE TABLE IF NOT EXISTS files (
     id INT AUTO_INCREMENT PRIMARY KEY,
     filename VARCHAR(255) NOT NULL UNIQUE,
     filepath VARCHAR(500) NOT NULL,
+    user_id INT DEFAULT NULL,
+    created_via VARCHAR(20) DEFAULT 'created',
     size INT DEFAULT 0,
     mime_type VARCHAR(100) DEFAULT 'text/plain',
     folder VARCHAR(255) DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_filename (filename),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    INDEX idx_files_user_id (user_id),
+    INDEX idx_files_created_via (created_via)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================
