@@ -1,9 +1,51 @@
 // Main JavaScript file for common functionality
 
 (function ensureHttpOrigin() {
+    function getProjectRootFromPath(pathname) {
+        let projectRoot = '';
+
+        if (pathname.includes('/frontend/')) {
+            projectRoot = pathname.replace(/\/frontend\/.*$/, '');
+        } else {
+            projectRoot = pathname.replace(/\/[^/]*$/, '');
+        }
+
+        if (window.location.protocol === 'file:') {
+            const normalizedPath = pathname.replace(/\\/g, '/');
+            const htdocsIndex = normalizedPath.toLowerCase().indexOf('/htdocs/');
+
+            if (htdocsIndex !== -1) {
+                projectRoot = normalizedPath.substring(htdocsIndex + '/htdocs'.length);
+                if (projectRoot.includes('/frontend/')) {
+                    projectRoot = projectRoot.replace(/\/frontend\/.*$/, '');
+                } else {
+                    projectRoot = projectRoot.replace(/\/[^/]*$/, '');
+                }
+            }
+        }
+
+        return projectRoot;
+    }
+
+    window.resolveFrontendUrl = function (page) {
+        const pageName = String(page || 'dashboard.html').replace(/^\/+/, '');
+        const pathname = window.location.pathname || '';
+        const projectRoot = getProjectRootFromPath(pathname);
+
+        if (window.location.protocol === 'file:') {
+            const backendOrigin = window.BACKEND_ORIGIN || localStorage.getItem('virtualai_backend_origin') || 'http://localhost';
+            return `${backendOrigin}${projectRoot}/frontend/${pageName}`;
+        }
+
+        return `${window.location.origin}${projectRoot}/frontend/${pageName}`;
+    };
+
     if (window.location.protocol !== 'file:') {
         return;
     }
+
+    const currentPage = (window.location.pathname.split('/').pop() || 'index.html').split('?')[0];
+    window.location.replace(window.resolveFrontendUrl(currentPage) + window.location.search + window.location.hash);
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -260,33 +302,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Resolve the backend endpoint across both Apache-served pages and file:// previews.
     window.resolveBackendUrl = function() {
-        const { protocol, origin, pathname } = window.location;
-        let projectRoot = '';
+        const pathname = window.location.pathname || '';
+        const projectRoot = pathname.includes('/frontend/')
+            ? pathname.replace(/\/frontend\/.*$/, '')
+            : pathname.replace(/\/[^/]*$/, '');
 
-        if (pathname.includes('/frontend/')) {
-            projectRoot = pathname.replace(/\/frontend\/.*$/, '');
-        } else {
-            projectRoot = pathname.replace(/\/[^/]*$/, '');
-        }
-
-        if (protocol === 'file:') {
-            const normalizedPath = pathname.replace(/\\/g, '/');
-            const htdocsIndex = normalizedPath.toLowerCase().indexOf('/htdocs/');
-
-            if (htdocsIndex !== -1) {
-                projectRoot = normalizedPath.substring(htdocsIndex + '/htdocs'.length);
-                if (projectRoot.includes('/frontend/')) {
-                    projectRoot = projectRoot.replace(/\/frontend\/.*$/, '');
-                } else {
-                    projectRoot = projectRoot.replace(/\/[^/]*$/, '');
-                }
-            }
-
-            const backendOrigin = window.BACKEND_ORIGIN || localStorage.getItem('virtualai_backend_origin') || 'http://localhost';
-            return `${backendOrigin}${projectRoot}/backend/api/command_handler.php`;
-        }
-
-        return `${origin}${projectRoot}/backend/api/command_handler.php`;
+        return `${window.location.origin}${projectRoot}/backend/api/command_handler.php`;
     };
 
     window.API_URL = window.resolveBackendUrl();

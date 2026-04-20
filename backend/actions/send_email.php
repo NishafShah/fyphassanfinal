@@ -69,6 +69,9 @@ function sendEmail($input) {
         ];
     }
 
+    $category = detectEmailCategory($subject, $messageBody, $attachments);
+    $attachmentCount = count($attachments);
+
     $pdo = getDbConnection();
 
     if (!$pdo) {
@@ -137,8 +140,8 @@ function sendEmail($input) {
         
         // Log to database
         $stmt = $pdo->prepare("
-            INSERT INTO emails (user_id, sender, recipient, subject, message, token, status)
-            VALUES (:user_id, :sender, :recipient, :subject, :message, :token, :status)
+            INSERT INTO emails (user_id, sender, recipient, subject, message, token, category, attachment_count, status)
+            VALUES (:user_id, :sender, :recipient, :subject, :message, :token, :category, :attachment_count, :status)
         ");
         
         $stmt->execute([
@@ -148,6 +151,8 @@ function sendEmail($input) {
             ':subject' => $subject,
             ':message' => $messageBody,
             ':token' => $token,
+            ':category' => $category,
+            ':attachment_count' => $attachmentCount,
             ':status' => $status
         ]);
         
@@ -176,8 +181,8 @@ function sendEmail($input) {
         // Log failed attempt
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO emails (user_id, sender, recipient, subject, message, token, status)
-                VALUES (:user_id, :sender, :recipient, :subject, :message, :token, 'failed')
+                INSERT INTO emails (user_id, sender, recipient, subject, message, token, category, attachment_count, status)
+                VALUES (:user_id, :sender, :recipient, :subject, :message, :token, :category, :attachment_count, 'failed')
             ");
             
             $stmt->execute([
@@ -186,7 +191,9 @@ function sendEmail($input) {
                 ':recipient' => $to,
                 ':subject' => $subject,
                 ':message' => $messageBody,
-                ':token' => $token
+                ':token' => $token,
+                ':category' => $category,
+                ':attachment_count' => $attachmentCount
             ]);
         } catch (Exception $logError) {
             error_log("Failed to log email: " . $logError->getMessage());
@@ -532,5 +539,30 @@ function generateEmailToken($from, $to, $subject) {
 
 function buildTokenizedMessageBody($from, $to, $messageBody, $token) {
     return $messageBody;
+}
+
+function detectEmailCategory($subject, $messageBody, array $attachments = []) {
+    if (!empty($attachments)) {
+        return 'file-share';
+    }
+
+    $haystack = strtolower(trim($subject . ' ' . $messageBody));
+
+    $keywordMap = [
+        'notification' => ['alert', 'notice', 'notification', 'notify', 'announcement', 'update', 'reminder'],
+        'request' => ['request', 'please', 'help', 'need', 'approve', 'approval', 'urgent'],
+        'follow-up' => ['follow up', 'follow-up', 'checking in', 're:', 'reply'],
+        'work' => ['meeting', 'project', 'task', 'report', 'client', 'invoice', 'deadline']
+    ];
+
+    foreach ($keywordMap as $category => $keywords) {
+        foreach ($keywords as $keyword) {
+            if ($keyword !== '' && strpos($haystack, $keyword) !== false) {
+                return $category;
+            }
+        }
+    }
+
+    return 'general';
 }
 ?>

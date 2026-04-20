@@ -121,9 +121,12 @@ function initDatabase() {
                 subject VARCHAR(500) NOT NULL,
                 message TEXT,
                 token VARCHAR(255) DEFAULT NULL,
+                category VARCHAR(50) DEFAULT 'general',
+                attachment_count INT DEFAULT 0,
                 status ENUM('sent', 'failed') DEFAULT 'sent',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_emails_user_id (user_id),
+                INDEX idx_emails_category (category),
                 INDEX idx_emails_status (status),
                 INDEX idx_emails_created_at (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -338,17 +341,32 @@ function ensureEmailsTableSchema($pdo) {
         $pdo->exec("ALTER TABLE emails ADD COLUMN token VARCHAR(255) DEFAULT NULL AFTER message");
     }
 
+    if (!in_array('category', $columns, true)) {
+        $pdo->exec("ALTER TABLE emails ADD COLUMN category VARCHAR(50) DEFAULT 'general' AFTER token");
+    }
+
+    if (!in_array('attachment_count', $columns, true)) {
+        $pdo->exec("ALTER TABLE emails ADD COLUMN attachment_count INT DEFAULT 0 AFTER category");
+    }
+
     $indexes = $pdo->query("SHOW INDEX FROM emails")->fetchAll(PDO::FETCH_ASSOC);
     $hasUserIdIndex = false;
+    $hasCategoryIndex = false;
     foreach ($indexes as $index) {
         if (($index['Column_name'] ?? '') === 'user_id') {
             $hasUserIdIndex = true;
-            break;
+        }
+        if (($index['Column_name'] ?? '') === 'category') {
+            $hasCategoryIndex = true;
         }
     }
 
     if (!$hasUserIdIndex) {
         $pdo->exec("ALTER TABLE emails ADD INDEX idx_emails_user_id (user_id)");
+    }
+
+    if (!$hasCategoryIndex) {
+        $pdo->exec("ALTER TABLE emails ADD INDEX idx_emails_category (category)");
     }
 }
 

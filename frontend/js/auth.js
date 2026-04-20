@@ -1,5 +1,12 @@
 // Authentication utilities (session-based)
 (function () {
+    function goToFrontendPage(page, query) {
+        const target = typeof window.resolveFrontendUrl === 'function'
+            ? window.resolveFrontendUrl(page)
+            : page;
+        window.location.href = query ? `${target}${query}` : target;
+    }
+
     function getAuthApiUrl() {
         if (typeof window.resolveBackendUrl === 'function') {
             return window.resolveBackendUrl().replace('backend/api/command_handler.php', 'backend/api/auth.php');
@@ -56,7 +63,7 @@
         const result = await authRequest(null, 'GET');
         if (!result.success) {
             const current = window.location.pathname.split('/').pop() || 'dashboard.html';
-            window.location.href = `login.html?next=${encodeURIComponent(current)}`;
+            goToFrontendPage('login.html', `?next=${encodeURIComponent(current)}`);
             return null;
         }
         return result.user || null;
@@ -87,7 +94,7 @@
             el.addEventListener('click', async function (e) {
                 e.preventDefault();
                 await authRequest({ action: 'logout' }, 'POST');
-                window.location.href = 'login.html';
+                goToFrontendPage('login.html');
             });
         }
 
@@ -140,7 +147,7 @@
 
             const params = new URLSearchParams(window.location.search);
             const next = params.get('next') || 'dashboard.html';
-            window.location.href = next;
+            goToFrontendPage(next);
         });
 
         registerForm.addEventListener('submit', async function (e) {
@@ -169,12 +176,12 @@
                 return;
             }
 
-            window.location.href = 'dashboard.html';
+            goToFrontendPage('dashboard.html');
         });
 
         authRequest(null, 'GET').then(function (result) {
             if (result && result.success) {
-                window.location.href = 'dashboard.html';
+                goToFrontendPage('dashboard.html');
             }
         });
     }
@@ -192,7 +199,7 @@
             const user = await ensureAuthenticated();
             if (!user) return;
             if (body.dataset.requireAdmin === 'true' && !user.is_admin) {
-                window.location.href = 'dashboard.html';
+                goToFrontendPage('dashboard.html');
                 return;
             }
             wireLogout(user);

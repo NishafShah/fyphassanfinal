@@ -80,6 +80,41 @@
                     <p>Ask me to create, edit, read, delete, or search files. I can also send emails for you.</p>
                 </div>
 
+                <section class="email-history-card" aria-labelledby="myEmailHistoryTitle">
+                    <div class="email-history-header">
+                        <div>
+                            <h2 id="myEmailHistoryTitle">My Email History</h2>
+                            <p>Sirf aap ki own sent emails aur count yahan show hoga.</p>
+                        </div>
+                        <button class="btn btn-secondary" id="refreshEmailHistoryBtn" type="button">Refresh</button>
+                    </div>
+                    <div class="email-history-stats">
+                        <div class="email-stat-box">
+                            <span class="email-stat-label">Total</span>
+                            <strong id="myEmailTotal">0</strong>
+                        </div>
+                        <div class="email-stat-box">
+                            <span class="email-stat-label">Sent</span>
+                            <strong id="myEmailSent">0</strong>
+                        </div>
+                        <div class="email-stat-box">
+                            <span class="email-stat-label">Failed</span>
+                            <strong id="myEmailFailed">0</strong>
+                        </div>
+                        <div class="email-stat-box">
+                            <span class="email-stat-label">Last Sent</span>
+                            <strong id="myEmailLastSent">-</strong>
+                        </div>
+                    </div>
+                    <div class="email-category-strip" id="myEmailCategorySummary" aria-label="My email categories">
+                        <span class="email-category-pill empty">Loading categories...</span>
+                    </div>
+                    <div id="myEmailHistoryAlert" class="upload-status" role="status" aria-live="polite"></div>
+                    <div class="email-history-list" id="myEmailHistoryList">
+                        <p class="email-history-empty">Loading your email history...</p>
+                    </div>
+                </section>
+
                 <!-- Chat Interface -->
                 <div class="chat-container">
                     <div class="chat-header">
@@ -279,6 +314,126 @@
             font-size: 13px;
             color: var(--color-gray-600);
         }
+        .email-history-card {
+            background: #fff;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .email-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .email-history-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .email-history-header p {
+            margin: 6px 0 0;
+            color: var(--color-gray-500);
+            font-size: 14px;
+        }
+        .email-history-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .email-stat-box {
+            background: var(--color-gray-50);
+            border: 1px solid var(--color-gray-200);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .email-stat-label {
+            display: block;
+            font-size: 12px;
+            color: var(--color-gray-500);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .email-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .email-category-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .email-category-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #eef4ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .email-category-pill.empty {
+            background: var(--color-gray-50);
+            color: var(--color-gray-500);
+            border-color: var(--color-gray-200);
+        }
+        .email-history-item {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr auto auto;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 12px;
+            background: var(--color-gray-50);
+            align-items: center;
+        }
+        .email-history-category {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 110px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .email-history-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        .email-history-meta {
+            font-size: 13px;
+            color: var(--color-gray-500);
+        }
+        .email-history-status {
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+        .email-history-status.sent {
+            color: var(--color-success);
+        }
+        .email-history-status.failed {
+            color: var(--color-error);
+        }
+        .email-history-empty {
+            color: var(--color-gray-500);
+            font-size: 14px;
+            margin: 0;
+            padding: 10px 0;
+        }
         
         /* No history message */
         .no-history {
@@ -287,10 +442,19 @@
             color: var(--color-gray-400);
             font-size: 13px;
         }
+        @media (max-width: 900px) {
+            .email-history-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .email-history-item {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 
     <script src="js/main.js?v=20260416a"></script>
     <script src="js/auth.js?v=20260416a"></script>
+    <script src="js/dashboard.js?v=20260419b"></script>
     <script src="js/assistant.js?v=20260416a"></script>
 </body>
 </html>
